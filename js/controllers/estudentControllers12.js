@@ -1,0 +1,568 @@
+//factoria para guardar y eliminar sesiones con sessionStorage
+var urlEstudiantes= 'http://prettywoman.esy.es/woman/estudiantes/';
+var urlCursos_servicios = 'http://prettywoman.esy.es/woman/cursos_servicios/';
+var urlCronograma ='http://prettywoman.esy.es/woman/cronograma_cursos/';
+var urlCursos_cabecera = 'http://prettywoman.esy.es/woman/cursos_cabecera/';
+ 
+//factoria para loguear y desloguear usuarios en angularjs
+
+
+
+
+app.factory("estudiantesFactoria", function($http, $location, sesionesControl, mensajesFlash){
+    return {
+        buscarEstudiante : function(cedula){
+            return $http({
+                url: urlEstudiantes+'estudianteCI/'+cedula,
+                method: "GET",
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            }).success(function(data){
+                mensajesFlash.clear();
+            }).error(function(data){
+                mensajesFlash.clear();
+                mensajesFlash.show("No esta registrado.");
+                //$location.path("/")
+            })
+        },
+        registroEstudiantes : function(estudent){
+             return $http({
+                url: urlEstudiantes+'guardarStudent',
+                method: "POST",
+                data :  "cedula="+estudent.cedula+
+                        "&apellidos="+estudent.apellidos+
+                        "&nombres="+estudent.nombres+
+                        "&telefono="+estudent.telefono+
+                        "&direccion="+estudent.direccion+
+                        "&email="+estudent.correo+
+                        "&cursos="+estudent.curso+
+                        "&costo="+estudent.costo+
+                        "&fecha="+estudent.fecha+
+                        "&disponible="+estudent.disponibilidad+
+                        "&condicion_pago="+estudent.condicion_pago+
+                        "&bancos="+estudent.bancos+
+                        "&transaccion="+estudent.transaccion+
+                        "&numero="+estudent.numero+
+                        "&monto="+estudent.monto+
+                        "&fecha_pago="+(estudent.fecha_pago).toISOString(),
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            }).success(function(data){
+                if(data.respuesta == "success"){                   
+                    //si todo ha ido bien limpiamos los mensajes flash
+                    mensajesFlash.clear();
+                    //creamos la sesión con el email del usuario
+                    cacheSession(user.email);
+                    //mandamos a la home
+                    // window.location.href="/woman/menu"; 
+                }else if(data.respuesta == "incomplete_form"){
+                    mensajesFlash.clear();
+                    mensajesFlash.show("Todos los campos del formulario deben estar llenos");
+                }else if(data.respuesta == "Exists"){
+                    mensajesFlash.clear();
+                    mensajesFlash.show("El email introducido ya existe en la bd.");
+                }
+            }).error(function(){
+                mensajesFlash.clear();
+                mensajesFlash.show("Ocurrio un error al Procesar los Datos");
+                window.location.href="estudiantes#/estudiantes";
+            })
+
+        },
+        modificarEstudiantes : function(estudent){
+             return $http({
+                url: urlEstudiantes+'update',
+                method: "POST",
+                data :  "cedula="+estudent.cedula+
+                        "&apellidos="+estudent.apellidos+
+                        "&nombres="+estudent.nombres+
+                        "&telefono="+estudent.telefono+
+                        "&direccion="+estudent.direccion+
+                        "&email="+estudent.correo,
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            }).error(function(){
+                mensajesFlash.clear();
+                mensajesFlash.show("Ocurrio un error al Procesar los Datos");
+                window.location.href="estudiantes#/estudiantes";
+            })
+
+        },
+        modificar_curos : function(cursosModificar){
+             return $http({
+                url: urlEstudiantes+'modificar_cursos_estudiante',
+                method: "POST",
+                data :  "cedula="+cursosModificar.cedula+
+                        "&numero_curso="+cursosModificar.numero+
+                        "&curso="+cursosModificar.curso+
+                        "&costo="+cursosModificar.costo+
+                        "&curso_1="+cursosModificar.curso_1+
+                        "&costo_1="+cursosModificar.costo_1+
+                        "&fecha="+cursosModificar.fecha+
+                        "&disponible="+cursosModificar.disponibilidad+
+                        "&condicion_pago="+cursosModificar.condicion_pago+
+                        "&bancos="+cursosModificar.bancos+
+                        "&transaccion="+cursosModificar.transaccion+
+                        "&numero_transaccion="+cursosModificar.numero_transaccion+
+                        "&monto="+cursosModificar.monto+
+                        "&fecha_pago="+(cursosModificar.fecha_pago).toISOString()+
+                        "&id_curso="+cursosModificar.id_curso+
+                        "&abono="+cursosModificar.abono+
+                        "&id_detalles="+cursosModificar.id_detalles,
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            }).success(function(data){
+                if(data.respuesta == "success"){                   
+                    //si todo ha ido bien limpiamos los mensajes flash
+                    mensajesFlash.clear();
+                    //creamos la sesión con el email del usuario
+                    cacheSession(user.email);
+                    //mandamos a la home
+                    // window.location.href="/woman/menu"; 
+                }else if(data.respuesta == "Formulario_incompleto"){
+                    mensajesFlash.clear();
+                    mensajesFlash.show("Todos los campos del formulario deben estar llenos");
+                }else if(data.respuesta == "false"){
+                    mensajesFlash.clear();
+                    mensajesFlash.show("Los datos fueron actualizados con éxito.");
+                }
+            }).error(function(){
+                mensajesFlash.clear();
+                mensajesFlash.show("Ocurrio un error al Procesar los Datos");
+                window.location.href="estudiantes#/estudiantes";
+            })
+        },
+        curos_servicios : function(){
+            return $http({
+                url:urlCursos_servicios+'services_cursos',
+                method:"POST",
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            }).success(function(data){
+                mensajesFlash.clear();
+            }).error(function(){
+                mensajesFlash.clear();
+                mensajesFlash.show("Error al procesar la información");
+                $location.path("/")
+            })
+        },
+        disponibilidad_cursos : function (cursos_id){
+            return $http({
+                url: urlCronograma + 'cursos_cronograma/' + cursos_id,
+                method:"POST",
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            }).success(function(data){
+                mensajesFlash.clear();
+            }).error(function(){
+                mensajesFlash.clear();
+                mensajesFlash.show("No hay cupos disponibles para el curso seleccionado");
+                $location.path("/")
+            })
+        },
+        buscar_cursos_estudiantes : function (cedula){
+             return $http({
+                url: urlCursos_servicios+ 'listado_estudiantes/' + cedula,
+                method:"POST",
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            })
+        },
+        buscar_recibos_ci : function (cedula){
+             return $http({
+                url: urlCursos_cabecera+ 'buscar_ci/' + cedula,
+                method:"POST",
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+            })
+        },
+        bancos : function(){
+            return $http({
+                url: urlEstudiantes + 'listado_bancos',
+                method:"POST",
+                headers:{'Content-Type':'application/x-www-form-urlencoded'}
+            }).success(function(data){
+                mensajesFlash.clear();
+            }).error(function(){
+                mensajesFlash.clear();
+                mensajesFlash.show("");
+                $location.path("/")
+            })
+        },
+        reimprimir_rcbo : function(cedula,recibo_n){
+            return $http({
+                url: urlEstudiantes + 'imprimir/' + cedula + '/' + recibo_n,
+                method: "GET",
+                headers:{'Content-Type': 'application/x-www-form-urlencoded'} 
+            })
+
+        }  
+    }
+})
+
+app.controller("estudiantesController", function($scope, $location, sesionesControl,authUsers,estudiantesFactoria,mensajesFlash){
+    $scope.estudent = {};
+    $scope.email = sesionesControl.get("email");
+    
+    $scope.atras = function(){
+       window.location.href="./estudiantes#/estudiantes";
+    }
+    $scope.modificar_datos = function(){
+      window.location.href=("./estudiantes#/estudiantes/modificar_datos");
+    }
+
+    $scope.reimrpimir_recibo = function() {
+      window.location.href=("./estudiantes#/estudiantes/reimprimir_recibos");
+    }
+    $scope.volver_inicio = function (){
+      window.location.href="./menu#";
+    }
+    $scope.dateOptions = {        
+        dateDisabled: disabled,        
+        maxDate: new Date(2020, 5, 22),
+        minDate: new Date(),
+        startingDay: 1
+    };
+    $scope.open2 = function() {
+    $scope.popup2.opened = true;
+    };
+    $scope.popup2 = {
+    opened: false
+    };
+  // Disable weekend selection
+    function disabled(data) {
+        var date = data.date,
+        mode = data.mode;
+        return mode === 'day' && (date.getDay() === 0 || date.getDay() === 6);
+    }
+    
+    estudiantesFactoria.bancos().success(function(data){
+        $scope.listado_bancos=data;
+    })    
+
+    estudiantesFactoria.curos_servicios().success(function(data){
+        if(data.data > 1){
+        $scope.listadoServices_cursos=data;
+        }
+    });
+    
+    $scope.modificar_estudiante = function (estudent){
+      $scope.estudent=estudent;
+     estudiantesFactoria.modificarEstudiantes($scope.estudent).success(function(data){
+        if(data.respuesta == 1){
+            mensajesFlash.clear();
+            mensajesFlash.show("los datos fueron procesados con éxito");
+            $scope.reset();
+        }else if(data.respuesta == 2){
+            mensajesFlash.clear();
+            mensajesFlash.show("El formulario no puede estar incompleto");
+        }else{
+            mensajesFlash.clear();
+            mensajesFlash.show("Ocurrio un error al procesar los datos, por favot vuelva a intentarlo");
+            $scope.reset();
+        }
+            });   
+    }
+    $scope.selectEstuidante = function() {
+        estudiantesFactoria.buscarEstudiante($scope.estudent.cedula).success(function(data){
+            if(data.respuesta==1){
+               $scope.cedula = $scope.estudent.cedula;
+               $scope.reset();
+               $scope.estudent.cedula = $scope.cedula;
+               mensajesFlash.clear();
+               mensajesFlash.show("No esta registrado debe llenar el formulario.");
+            }else{
+                $scope.estudiantes=data;
+                $scope.estudent.apellidos=$scope.estudiantes[0]['apellidos'];
+                $scope.estudent.nombres=$scope.estudiantes[0]['nombres'];
+                $scope.estudent.telefono=$scope.estudiantes[0]['telefono'];
+                $scope.estudent.direccion=$scope.estudiantes[0]['direccion'];
+                $scope.estudent.correo=$scope.estudiantes[0]['correo'];
+            }
+        })
+    };
+
+    $scope.selectAction = function() {
+    if($scope.estudent.curso!= null){
+      $scope.estudent.costo=($scope.estudent.curso).substring(1);
+      estudiantesFactoria.disponibilidad_cursos(($scope.estudent.curso).substring(0,1)).success(function(data){
+        console.log(data.data);
+        if(data.data==1){
+          $scope.listado_cronograma="";
+        }else{
+        $scope.listado_cronograma=data;
+        }
+      }); 
+    }else if($scope.cursosModificar.curso!= null){
+      
+      $scope.cursosModificar.costo_1=($scope.cursosModificar.curso_1).substring(1);
+      estudiantesFactoria.disponibilidad_cursos(($scope.cursosModificar.curso_1).substring(0,1)).success(function(data){
+        $scope.listado_cronograma=data;
+      });
+    }
+       
+    }
+
+    $scope.selectDisponibilidad = function(){
+      if($scope.estudent.fecha!=null){
+        $scope.estudent.disponibilidad=($scope.estudent.fecha).substring(1);
+      } else if($scope.cursosModificar.fecha!=null){
+        $scope.cursosModificar.disponibilidad=($scope.cursosModificar.fecha).substring(1);
+      }
+    }
+
+    $scope.seleccionarMonto = function(){
+      if($scope.estudent.condicion_pago!=null){
+        if($scope.estudent.condicion_pago=="Pago Total"){
+            $scope.estudent.monto = $scope.estudent.costo;
+        }else{
+            $scope.estudent.monto = (($scope.estudent.costo)*30)/100;
+        }
+      }else if($scope.estudent.condicion_pago!=null){
+        alert($scope.cursosModificar.abono);
+        $scope.estudent.monto = $scope.estudent.costo-$scope.cursosModificar.abono;
+      }
+    }
+
+    $scope.guardar = function(estudent){
+        $scope.estudent=estudent;
+        if($scope.estudent==''){
+           mensajesFlash.clear();
+           mensajesFlash.show("Debe llenar todos los campos del formulario.");
+        }else if($scope.estudent.monto == 0){
+            mensajesFlash.clear();
+            mensajesFlash.show("Debe cancelar la totalidad del curso o abonar.");
+        }else{
+        //alert('Form submitted with' + JSON.stringify(estudent));           
+            estudiantesFactoria.registroEstudiantes($scope.estudent).success(function(data){
+                if(data.respuesta=="success"){
+                  mensajesFlash.clear();
+                  mensajesFlash.show("Los datos fueron Porcesados con éxito."); 
+                  $scope.reset();
+                }else if(data.respuesta=="existe"){
+                  mensajesFlash.clear();
+                  mensajesFlash.show("Su solicitud no puede ser procesada porque ya tiene inscrito el curso.");
+                  $scope.reset();
+                }else if(data.respuesta == "incomplete_form"){
+                    mensajesFlash.clear();
+                    mensajesFlash.show("Todos los campos del formulario deben estar llenos");
+                }
+            });  
+        }
+    }
+
+    $scope.gridOptions = {
+      columnDefs: [
+        { field: 'numero', displayName:'N',width:'5%',visible:false},
+        { field: 'id_c', displayName:'id_C',width:'5%',visible:false },
+        { field: 'descripcion', displayName:'Curso',width:'20%'},
+        { field: 'id_cr', displayName:'Id cr',enableSorting: false,visible:false  },
+        { field: 'fecha_del_curso', displayName:'Fecha Inicio',enableSorting: false },
+        { field: 'hora_inicio', displayName:'Hora Inicio'},
+        { field: 'costo', displayName:'Costo'},
+        { field: 'Abono', displayName:'Abono'},
+        { field: 'Faltante', displayName:'Faltante'},
+        { field: 'Accion', displayName:'Acción',cellTemplate:'<button class="accion" ng-click="grid.appScope.modificarAbono(row)">Modificar</button>' }
+      ]
+    };
+
+    $scope.grid = function(cedula_1){
+       estudiantesFactoria.buscar_cursos_estudiantes(cedula_1).success(function(data){         
+        if(data.respuesta != 1){
+            mensajesFlash.clear();
+            $scope.myData= data;
+
+            $scope.gridOptions = {};  
+              $scope.gridOptions = {
+                enableSorting: true,
+                enableRowSelection: true,
+                enableFullRowSelection: true,
+                multiSelect: true,
+                enableRowHeaderSelection: false,
+                enableColumnMenus: false,
+                enableFiltering: true,
+                minRowsToShow: $scope.myData.length+1,
+                enableScrollbars:false,
+
+                columnDefs: [
+                  { field: 'cedula', displayName:'N',width:'5%',visible:false},
+                  { field: 'id_detalles', displayName:'N',width:'5%',visible:false},
+                  { field: 'numero', displayName:'N',width:'5%',visible:false},
+                  { field: 'id_c', displayName:'id_C',width:'5%',visible:false },
+                  { field: 'descripcion', displayName:'Curso',width:'30%'},
+                  { field: 'id_cr', displayName:'Id cr',enableSorting: false,visible:false  },
+                  { field: 'fecha_del_curso', displayName:'Fecha Inicio',enableSorting: false },
+                  { field: 'hora_inicio', displayName:'Hora Inicio'},
+                  { field: 'costo', displayName:'Costo'},
+                  { field: 'Abono', displayName:'Abono'},
+                  { field: 'Faltante', displayName:'Faltante'},
+                  { field: 'Accion', displayName:'Acción',cellTemplate:'<button class="accion" ng-click="grid.appScope.modificarAbono(row)">Modificar</button>' }
+                ],
+    
+              };
+            $scope.gridOptions.data =$scope.myData;  
+           
+        }else{
+            mensajesFlash.clear();
+            mensajesFlash.show("No tiene cursos Inscritos."); 
+        }
+    });
+  }
+   $scope.buscar = function(){
+    $scope.cursosModificar = {};
+    $scope.mostrar = {show: false};
+    $scope.mostrarFormulario = {show:false}; 
+    $scope.cambiarCursos = {show:false};
+    $scope.visible = {show:true};
+    $scope.checkbox='checked';
+  
+      $scope.toggle = function () {
+        $scope.visible.show = !$scope.visible.show;
+        $scope.cambiarCursos.show = !$scope.cambiarCursos.show;
+        $scope.cursosModificar.curso_1="u";
+        $scope.cursosModificar.costo_1="undefined";
+        $scope.cursosModificar.disponibilidad="undefined";
+      };
+
+        estudiantesFactoria.buscarEstudiante($scope.estudent.cedula).success(function(data){
+            if(data.respuesta==1){
+               $scope.cedula = $scope.estudent.cedula;
+               $scope.reset();
+               $scope.estudent.cedula = $scope.cedula;
+               mensajesFlash.clear();
+               mensajesFlash.show("No tiene Cursos inscritos.");
+            }else{
+                $scope.estudiantes=data;
+                $scope.estudent.apellidos=$scope.estudiantes[0]['apellidos'];
+                $scope.estudent.nombres=$scope.estudiantes[0]['nombres'];
+                $scope.estudent.telefono=$scope.estudiantes[0]['telefono'];
+                $scope.estudent.direccion=$scope.estudiantes[0]['direccion'];
+                $scope.estudent.correo=$scope.estudiantes[0]['correo'];
+            }
+        })
+
+       
+//Funcion para modificar el monto abonado por el estudiante. (Click sobre el grid)        
+        $scope.modificarAbono = function(row){
+          if(row.entity.Faltante <= 0){
+              $scope.mostrarFormulario = {show:false}; 
+              $scope.mostrar.show = !$scope.mostrar.show;
+              $scope.mensaje="El curso ya fue Cancelado.";
+          }else {
+          $scope.cursosModificar = {};
+          $scope.mostrar = {show: false};
+          $scope.mostrarFormulario.show = !$scope.mostrarFormulario.show;
+          $scope.cursosModificar.cedula = row.entity.cedula;
+          $scope.cursosModificar.numero = row.entity.numero; 
+          $scope.cursosModificar.id_curso = row.entity.id_c; 
+          $scope.cursosModificar.curso = row.entity.descripcion;
+          $scope.cursosModificar.costo = row.entity.costo;
+          $scope.cursosModificar.fecha = row.entity.id_cr;
+          $scope.cursosModificar.monto = row.entity.Faltante;
+          $scope.cursosModificar.faltante = row.entity.Faltante;
+          $scope.cursosModificar.abono = row.entity.Abono;
+          $scope.cursosModificar.id_detalles = row.entity.id_detalles;
+          }
+        }; 
+
+//Monstrar datos del estudiante en el grid.
+
+    $scope.grid($scope.estudent.cedula);
+
+// modificar abonos de los cursos en la base de datos
+
+  $scope.cursos_abono = function(cursosModificar) {   
+    if(($scope.cursosModificar.monto == $scope.cursosModificar.faltante) && cursosModificar.condicion_pago == "Abonar"){
+      $scope.mensaje_monto = "Por favor cambie el Monto a pagar si va Abonar";
+    }else if($scope.cursosModificar.monto > $scope.cursosModificar.faltante){
+      $scope.mensaje_monto = "El monto a pagar no debe ser mayor a (" + $scope.cursosModificar.faltante + ")";
+    }else{
+      $scope.cursosModificar=cursosModificar;
+        estudiantesFactoria.modificar_curos($scope.cursosModificar).success(function(data){
+        $scope.grid($scope.cursosModificar.cedula);
+        $scope.mensaje_monto = "Los datos fuerón procesados con éxito.";
+        $scope.reset();      
+      });
+    }
+  }
+
+}
+
+// BUSCAR RECIBOS PARA REIMPRIMIRLOS ..................
+
+    $scope.gridReimprimir_recibos = {
+        columnDefs: [                    
+            { field: 'id', displayName:'N'},
+            { field: 'fecha', displayName:'Fecha'},
+            { field: 'total', displayName:'Total'},
+            { field: 'status', displayName:'Estado'},
+            { field: 'Accion', displayName:'Acción',cellTemplate:'<button class="accion" ng-click="grid.appScope.reimprimir(row)">Imprimir</button>' }
+        ]
+    };
+    
+    $scope.gridRecibos = function (cedula_1){
+            
+        estudiantesFactoria.buscar_recibos_ci($scope.estudent.cedula).success(function(data){            
+            if(data!=0){
+                mensajesFlash.clear();
+                $scope.dataRecibos= data;
+                $scope.gridReimprimir_recibos = {};
+                
+                $scope.dataRecibos.apellidos=$scope.dataRecibos[0]['apellidos'];
+                $scope.dataRecibos.nombres=$scope.dataRecibos[0]['nombres'];
+                $scope.dataRecibos.telefono=$scope.dataRecibos[0]['telefono'];
+                $scope.dataRecibos.direccion=$scope.dataRecibos[0]['direccion'];
+                $scope.dataRecibos.correo=$scope.dataRecibos[0]['correo'];
+
+                $scope.gridReimprimir_recibos = {
+                    enableSorting: true,
+                    enableRowSelection: true,
+                    enableFullRowSelection: true,
+                    multiSelect: true,
+                    enableRowHeaderSelection: false,
+                    enableColumnMenus: false,
+                    enableFiltering: true,
+                    minRowsToShow: $scope.dataRecibos.length+1,
+                    enableScrollbars:false,
+                    columnDefs: [
+                        { field: 'id', displayName:'N'},
+                        { field: 'fecha', displayName:'Fecha'},
+                        { field: 'total', displayName:'Total'},
+                        { field: 'status', displayName:'Estado'},
+                        { field: 'Accion', displayName:'Acción',cellTemplate:'<button class="accion" ng-click="grid.appScope.reimprimir(row)">Imprimir</button>' }
+                    ],
+                };                    
+            $scope.gridReimprimir_recibos.data =$scope.dataRecibos;     
+
+            }else {
+                $scope.dataRecibos="";
+                $scope.gridReimprimir_recibos.data=$scope.dataRecibos;
+                mensajesFlash.clear();
+                mensajesFlash.show("No tiene recibos para consultar");
+                      
+            }
+        })
+    }
+
+    $scope.buscar_recibos_ci = function (){        
+        $scope.gridRecibos($scope.estudent.cedula);        
+         //$scope.gridRecibos($scope.estudent.cedula);
+    }
+ 
+   $scope.reimprimir = function (row){
+        estudiantesFactoria.reimprimir_rcbo($scope.estudent.cedula,row.entity.id).success(function(data){
+            mensajesFlash.clear();
+            mensajesFlash.show("El recibo fue enviado a su correo:");
+
+        })
+        
+   }
+  $scope.consultarCursos = function (){       
+    $location.path("/estudiantes/consultar_cursos");
+   }  
+    $scope.reset = function(form) {
+      $scope.estudent = {};
+      $scope.cursosModificar = {};
+      if (form) {
+        form.$setPristine();
+        form.$setUntouched();
+      }
+    }
+    $scope.logout = function(){
+        authUsers.logout();
+    }
+})
+
+
